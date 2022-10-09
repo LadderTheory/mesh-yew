@@ -5,7 +5,7 @@ use crate::particle::Particle;
 use crate::line::Line;
 use crate::math::Vector2D;
 
-pub const SIZE: Vector2D = Vector2D::new(1920.0,2000.0);
+pub const SIZE: Vector2D = Vector2D::new(1920.0,1080.0);
 
 pub enum Msg {
     Tick,
