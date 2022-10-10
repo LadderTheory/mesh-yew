@@ -1,6 +1,7 @@
-use yew::{Html,html};
+//use yew::{Html,html};
 use crate::math::{Vector2D};
 
+#[derive(Clone)]
 pub struct Line {
     p1: Vector2D,
     p2: Vector2D,

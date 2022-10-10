@@ -8,20 +8,26 @@ mod particle;
 mod math;
 mod line;
 
-struct App;
+struct App {
+    node_ref: NodeRef,
+}
 
 impl Component for App {
     type Message = ();
     type Properties = ();
 
     fn create(_: &Context<Self>) -> Self {
-        App
+        App {
+            node_ref: NodeRef::default(),
+        }
     }
 
     fn view(&self, _: &Context<Self>) -> Html {
-        html! {
+        let svg = html! {
             <MeshField/>
-        }
+        };
+
+        svg
     }
 }
 

@@ -10,3 +10,4 @@ yew = { git="https://github.com/yewstack/yew", features = ["csr"] }
 getrandom = { version = "0.2", features = ["js"] }
 rand = "0.8.5"
 gloo = "0.8.0"
+web-sys = "0.3.60"

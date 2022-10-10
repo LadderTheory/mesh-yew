@@ -1,11 +1,13 @@
+use gloo::utils::document;
 use yew::{Component,Context,html,Html};
 use gloo::timers::callback::Interval;
+use web_sys::{Document, Element};
 
 use crate::particle::Particle;
 use crate::line::Line;
 use crate::math::Vector2D;
 
-pub const SIZE: Vector2D = Vector2D::new(1920.0,1080.0);
+//pub const SIZE: Vector2D = Vector2D::new(1920.0,1080.0);
 
 pub enum Msg {
     Tick,
@@ -16,6 +18,7 @@ pub struct MeshField {
     lines: Vec<Line>,
     interval: Interval,
     max_line_len: f64,
+    size: Vector2D,
 }
 
 impl Component for MeshField {
@@ -23,8 +26,10 @@ impl Component for MeshField {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let particles = (0..50)
-            .map(|_| Particle::new_random("red".to_string()))
+        let size = get_size();
+
+        let particles = (0..20)
+            .map(|_| Particle::new_random("red".to_string(), size))
             .collect();
 
         let interval = {
@@ -32,21 +37,19 @@ impl Component for MeshField {
             Interval::new(50, move || link.send_message(Msg::Tick))
         };
 
-        let lines = vec![];
-
-        let max_line_len = 200.0;
-
         Self { 
             particles,
-            lines,
+            lines: vec![],
             interval,
-            max_line_len,
+            max_line_len: 200.0,
+            size,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Tick => {
+                self.size = get_size();
                 self.update_particles();
                 self.update_lines();
                 true
@@ -55,20 +58,20 @@ impl Component for MeshField {
     }
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
-        let view_box = format!("0 0 {} {}", SIZE.x, SIZE.y);
+        let view_box = format!("0 0 {} {}", self.size.x, self.size.y);
 
         let mut middles = vec![];
 
         for i in 0..self.lines.len() {
-            middles.push(Particle::new(self.lines[i].middle(), Vector2D::zero(), self.particles[0].radius, "red".to_string()));
+            middles.push(Particle::new(self.lines[i].middle(), Vector2D::zero(), self.particles[0].radius, "white".to_string(), self.lines[i].alpha, self.size));
         }
         
         html! {
             <svg class="simulation-window" viewBox={view_box}>
+                { for self.particles.iter().map(Particle::render) }
                 { for self.lines.iter().map(|x| Line::render(x, "white".to_string())) }
-                //{ for self.particles.iter().map(Particle::render) }
                 //{ for middles.iter().map(Particle::render) }
-                { for self.draw_lines(middles).iter().map(|x| Line::render(x, "red".to_string())) }
+                //{ for self.draw_lines(middles).iter().map(|x| Line::render(x, "red".to_string())) }
             </svg>
         }
     }
@@ -76,7 +79,11 @@ impl Component for MeshField {
 
 impl MeshField {
     fn update_lines(&mut self) {
-        self.lines = self.draw_lines(self.particles.clone());
+        //self.lines = self.draw_lines(self.particles.clone());
+        let new_lines = self.draw_lines(self.particles.clone());
+        for h in 0..new_lines.len() {
+            self.lines.push(new_lines[h].clone());
+        }
     }
 
     fn draw_lines(&self, particles: Vec<Particle>) -> Vec<Line> {
@@ -93,7 +100,7 @@ impl MeshField {
                     let line_len = line.len();
 
                     if line_len < self.max_line_len {
-                        line.alpha = (self.max_line_len - line_len) / self.max_line_len;
+                        line.alpha = ((self.max_line_len - line_len) / self.max_line_len) ;
                         lines.push(line)
                     }
                 }
@@ -106,13 +113,15 @@ impl MeshField {
 
     fn update_particles(&mut self) {
         for h in 0..self.particles.len() {
+            self.particles[h].field_size = self.size;
             self.particles[h].update();
         }
     }
 }
 
 impl Line {
-    pub fn render(&self, color: String) -> Html {let style = format!("stroke-opacity: {:.2}", self.alpha);
+    pub fn render(&self, color: String) -> Html {
+        let style = format!("stroke-opacity: {:.2}", self.alpha);
 
         let (p1,p2) = self.get_points();
 
@@ -135,12 +144,20 @@ impl Particle {
         let y = format!("{:.2}", self.position.y);
         let r = format!("{:.2}", self.radius);
 
+        let style = format!("opacity: {:.2}", self.alpha);
+
         html! {
-            <circle cx={x} cy={y} r={r} fill={self.color.clone()} />
+            <circle cx={x} cy={y} r={r} fill={self.color.clone()} {style} />
         }
     }
 }
 
 fn str(x: f64) -> String {
     format!("{:.2}", x)
+}
+
+fn get_size() -> Vector2D {
+    let body = document().body().unwrap();
+
+    Vector2D::new(body.client_width() as f64, body.client_height() as f64)
 }
