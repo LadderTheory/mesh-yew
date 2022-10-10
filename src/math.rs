@@ -1,4 +1,4 @@
-use std::ops::{AddAssign,MulAssign,Sub};
+use std::ops::{AddAssign,MulAssign,Sub,Add,Div};
 
 #[derive(Copy,Clone,PartialEq,Default)]
 pub struct Vector2D {
@@ -17,6 +17,10 @@ impl Vector2D {
 
     pub fn hypotenuse(&mut self) -> f64 {
         f64::sqrt((self.x*self.x) + (self.y*self.y))
+    }
+
+    pub const fn zero() -> Vector2D {
+        Vector2D::new(0.0, 0.0)
     }
 }
 
@@ -41,6 +45,28 @@ impl Sub for Vector2D {
         Self {
             x: self.x - other.x,
             y: self.y - other.y,
+        }
+    }
+}
+
+impl Add for Vector2D {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+impl Div for Vector2D {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        Self {
+            x: self.x / other.x,
+            y: self.y / other.y,
         }
     }
 }
